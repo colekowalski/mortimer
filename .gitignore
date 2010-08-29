@@ -1,0 +1,7 @@
+*.pyc
+build
+dist
+mortimer.egg-info
+
+._*
+.*~
