@@ -4,6 +4,12 @@ Mortimer is a small and fast micro web framework conforming to the WSGI
 specification. It is designed to be lightweight, and to stay out of your
 way.
 
+Installation
+------------
+To install:
+    python setup.py build
+    sudo python setup.py install
+
 Example
 -------
 
