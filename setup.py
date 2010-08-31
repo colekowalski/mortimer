@@ -19,6 +19,7 @@ import setuptools
 distutils.core.setup(
     name = 'mortimer',
     version = '0.1',
+    packages = ['mortimer'],
     author = 'Cole Kowalski',
     author_email = 'colekowalski@gmail.com',
     url = 'http://github.com/colekowalski/Mortimer/',
