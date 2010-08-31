@@ -195,8 +195,7 @@ class WebApplication(object):
             ## other exceptions have been thrown
             handler = ErrorRequestHandler(self, env, status=500)
             callback(handler.status, handler.headers)
-            #return handler.execute()
-            return e
+            return handler.execute()
 
 class ErrorRequestHandler(RequestHandler):
     """ Generate error pages based on HTTP status codes
@@ -230,3 +229,4 @@ class HTTPError(Exception):
     """
     def __init__(self, status=404):
         self.status = status
+
