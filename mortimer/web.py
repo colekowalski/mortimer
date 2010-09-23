@@ -182,19 +182,22 @@ class WebApplication(object):
             handler, args = self.find_handler(uri)
             h = handler(self, env)
             ret = h.execute(*args)
-            callback(h.status, h.headers)
+            status = util.code_to_status(h.status)
+            callback('200 OK', h.headers)
             return ret
         except HTTPError, e:
             ## if an HTTPError was thrown, send down an error page
             ## based on the thrown HTTP status code
             handler = ErrorRequestHandler(self, env, status=e.status)
-            callback(handler.status, handler.headers)
+            status = util.code_to_status(handler.status)
+            callback(status, handler.headers)
             return handler.execute()
         except:
             ## return a 500 Internal Server Error page if any
             ## other exceptions have been thrown
             handler = ErrorRequestHandler(self, env, status=500)
-            callback(handler.status, handler.headers)
+            status = util.code_to_status(handler.status)
+            callback(status, handler.headers)
             return handler.execute()
 
 class ErrorRequestHandler(RequestHandler):
@@ -219,7 +222,7 @@ class ErrorRequestHandler(RequestHandler):
     ## send down a short status message. We don't need to
     ## all the functionality that our parent class has.
     def execute(self):
-        return httplib.responses[self.status]
+        return util.code_to_status(self.status)
 
 class HTTPError(Exception):
     """ HTTP error exception

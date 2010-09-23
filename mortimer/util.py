@@ -13,6 +13,7 @@
 # under the License.
 
 import urllib
+import httplib
 
 def process_get_vars(data):
     """ Parse query string into key-value pairs. """
@@ -64,3 +65,19 @@ def process_cookie_data(data):
         except ValueError:
             pass
     return cookies
+
+def code_to_status(code):
+    """ Convert HTTP code to response string
+    The response are pulled from httplib.responses:
+        200 => '200 OK'
+        404 => '404 NOT FOUND'
+        ...
+    
+    Attributes:
+        code -- HTTP status code
+    """
+    try:
+        return '%s %s' %(str(code), httplib.responses.get(code))
+    except:
+        raise
+
