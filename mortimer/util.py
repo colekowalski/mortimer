@@ -23,7 +23,7 @@ def process_get_vars(data):
     for p in data.split('&'):
         try:
             (k, v) = p.split('=')
-            get[k] = v
+            get[k] = urllib.unquote(v)
         except ValueError:
             pass
     return get
