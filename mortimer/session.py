@@ -78,7 +78,7 @@ class Session(dict):
             sess_id = self.req.cookies['session_id']
             return sess_id
         except KeyError:
-            return None
+            return self.gen_session_id()
 
     def send_session_cookie(self):
         self.req.set_cookie('session_id=%s' %(self.session_id))
@@ -98,8 +98,6 @@ class Session(dict):
     def save(self):
         if not self.dirty:
             return
-        if self.session_id is None:
-            self.session_id = self.gen_session_id()
         self.send_session_cookie()
         pdata = self.pickle_session()
         self.store.save(self.session_id, pdata)
