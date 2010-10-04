@@ -15,8 +15,8 @@
 import os
 import random
 import cPickle
-from hashlib import sha1
-from datetime import datetime
+import hashlib
+import datetime
 
 class FileStore(object):
     """ Store for saving session data to disk
@@ -84,8 +84,8 @@ class Session(dict):
         self.req.set_cookie('session_id=%s' %(self.session_id))
 
     def gen_session_id(self):
-        s = sha1()
-        s.update(str(datetime.now()))
+        s = hashlib.md5()
+        s.update(str(datetime.datetime.now()))
         s.update(str(random.random()))
         return s.hexdigest()
 
