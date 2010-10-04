@@ -16,7 +16,7 @@ import jinja2
 
 class Jinja2View(object):
     """ View controller using Jinja2
-    
+
     Attributes:
         path -- file path to the jinja2 templates
     """

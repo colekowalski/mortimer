@@ -20,13 +20,13 @@ import view
 
 class RequestHandler(object):
     """ Base request handler class
-    
+
     Subclasses of RequestHandler are responsible for implementing methods
     to handle get/post/etc. The method names will be the name of the HTTP
     method, such as:
         def get(self, id):
             ...
-    
+
     Attributes:
         application -- Instance of WebApplication from which we were called
         env         -- WSGI environment dict
@@ -41,7 +41,7 @@ class RequestHandler(object):
 
     def init_request(self):
         """ Initialize the request
-        
+
         Here we will initialize the request by setting up our session
         and setting some default headers
         """
@@ -52,16 +52,16 @@ class RequestHandler(object):
 
     def add_header(self, name, val):
         """ Add a header to our list of headers
-        
+
         Headers are defined in a list of tuples containing the header
         name and header value:
-        
+
             [('Content-type', 'text/html'), ('Set-Cookie', 'cookie data')]
-        
+
         When adding a header to our list of headers, we check if the header
         has been previously defined. If so,  we will first remove the
         prevous header before adding the new header
-        
+
         There can be many set-cookie headers per request. We do not
         replace any previously-existing set-cookie headers when adding
         new set-cookie headers
@@ -92,7 +92,7 @@ class RequestHandler(object):
 
     def redirect(self, loc):
         """ Convenience method to send a redirect
-        
+
         We will redirect a user by returning a status of '302 FOUND'
         and setting the Location header in the response
         """
@@ -125,7 +125,7 @@ class RequestHandler(object):
 
     def execute(self, *args, **kwargs):
         """ Execute our handler
-        
+
         Based on the request method (as passed to us in the WSGI
         environment), execute the appropriate method, passing in
         method arguments based on the URL pattern that was defined.
@@ -141,19 +141,19 @@ class RequestHandler(object):
 
 class WebApplication(object):
     """ Base web application class
-    
+
     Subclasses of WebApplication will contain a collection of request
     handlers that will make up the web application. It is the responsiblity
     of the subclass instance to define the handlers that the application
     will handle.
-    
+
         class TestApplication(WebApplication):
             def __init__(self):
                 self.handlers = [
                     (r'^/$', SomeHandlerClass),
                     (r'^/test/?$', SomeOtherHandlerClass),
                 ]
-    
+
     Webapplication instances are directly callable and conform to the WSGI
     specification.
     """
@@ -162,7 +162,7 @@ class WebApplication(object):
 
     def find_handler(self, uri):
         """ Find the correct handler
-        
+
         Iterate though our list of handlers, trying to match the request
         URI to the regex defined in our request handler list. If no
         handler is found for the request URI, a 404 exception will be raised
@@ -202,11 +202,11 @@ class WebApplication(object):
 
 class ErrorRequestHandler(RequestHandler):
     """ Generate error pages based on HTTP status codes
-    
+
     When supplied with an HTTP status code (most likely from a thrown
     HTTPError), generate an error page with a short status message,
     taken from httplib.responses for the specified status code
-    
+
     Attributes:
         application -- Instance of WebApplication from which we were called
         env         -- WSGI environment dict
@@ -226,7 +226,7 @@ class ErrorRequestHandler(RequestHandler):
 
 class HTTPError(Exception):
     """ HTTP error exception
-    
+
     Attributes:
         status -- http status code
     """

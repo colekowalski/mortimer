@@ -29,8 +29,8 @@ def process_get_vars(data):
     return get
 
 def process_post_vars(data):
-    """ Parse post data into key-value pairs. 
-    
+    """ Parse post data into key-value pairs.
+
     If there are multiple form items of the same name, a list will be
     created containing all the values
     """
@@ -72,7 +72,7 @@ def code_to_status(code):
         200 => '200 OK'
         404 => '404 NOT FOUND'
         ...
-    
+
     Attributes:
         code -- HTTP status code
     """

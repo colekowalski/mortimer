@@ -25,7 +25,7 @@ class FileStore(object):
     session files will be saved to '/tmp/session/', however this is
     configurable by passing in the path argument when initializing
     the file store.
-    
+
     The file name of each session will be the session id
     """
     def __init__(self, path='/tmp/session/'):
