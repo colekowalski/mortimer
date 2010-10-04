@@ -111,7 +111,8 @@ class RequestHandler(object):
         """ Return the parsed post arguments of the request"""
         if self.env['REQUEST_METHOD'] != 'POST':
             return {}
-        data = self.env['wsgi.input'].readline()
+        length = self.env['CONTENT_LENGTH']
+        data = self.env['wsgi.input'].read(int(length))
         return util.process_post_vars(data)
 
     @property
