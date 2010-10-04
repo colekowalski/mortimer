@@ -28,7 +28,7 @@ class FileStore(object):
 
     The file name of each session will be the session id
     """
-    def __init__(self, path='/tmp/session/'):
+    def __init__(self, path='/tmp/'):
         self.path = path
 
     def save(self, sess_id, data):
