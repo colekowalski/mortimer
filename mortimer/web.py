@@ -187,6 +187,15 @@ class WebApplication(object):
             status = util.code_to_status(h.status)
             callback(status, h.headers)
             return ret
+        ## if a request is made via a method we have not implemented
+        ## a request handler for, an AttributeError with be raised
+        ## a 405 Method Not ALlowed status might work here, but for
+        ## now we will just send a 404 status
+        except AttributeError:
+            handler = ErrorRequestHandler(self, env, status=404)
+            status = util.code_to_status(handler.status)
+            callback(status, handler.headers)
+            return handler.execute()
         ## if an HTTPError was thrown, send down an error page
         ## based on the thrown HTTP status code
         except HTTPError, e:
