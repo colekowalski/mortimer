@@ -14,6 +14,7 @@
 
 import re
 import httplib
+import traceback
 import util
 import session
 import view
@@ -186,16 +187,18 @@ class WebApplication(object):
             status = util.code_to_status(h.status)
             callback(status, h.headers)
             return ret
+        ## if an HTTPError was thrown, send down an error page
+        ## based on the thrown HTTP status code
         except HTTPError, e:
-            ## if an HTTPError was thrown, send down an error page
-            ## based on the thrown HTTP status code
             handler = ErrorRequestHandler(self, env, status=e.status)
             status = util.code_to_status(handler.status)
             callback(status, handler.headers)
             return handler.execute()
+        ## return a 500 Internal Server Error page if any
+        ## other exceptions have been thrown. We will also send
+        ## a traceback for further investigation of the error
         except:
-            ## return a 500 Internal Server Error page if any
-            ## other exceptions have been thrown
+            traceback.print_exc(file=env['wsgi.errors'])
             handler = ErrorRequestHandler(self, env, status=500)
             status = util.code_to_status(handler.status)
             callback(status, handler.headers)
