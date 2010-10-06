@@ -35,7 +35,7 @@ class RequestHandler(object):
         self.application = application
         self.env = env
         self.session = None
-        self.status = '200'
+        self.status = 200
         self.headers = []
         self.init_request()
 
@@ -184,7 +184,7 @@ class WebApplication(object):
             h = handler(self, env)
             ret = h.execute(*args)
             status = util.code_to_status(h.status)
-            callback('200 OK', h.headers)
+            callback(status, h.headers)
             return ret
         except HTTPError, e:
             ## if an HTTPError was thrown, send down an error page
