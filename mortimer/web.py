@@ -238,7 +238,7 @@ class WebApplication(object):
             ret = h.execute(*args)
             status = util.code_to_status(h.status)
             callback(status, h.headers)
-            return ret
+            return iter(ret)
         ## if a request is made via a method we have not implemented
         ## a request handler for, an AttributeError with be raised
         ## a 405 Method Not ALlowed status might work here, but for
@@ -247,14 +247,14 @@ class WebApplication(object):
             handler = ErrorRequestHandler(self, env, status=404)
             status = util.code_to_status(handler.status)
             callback(status, handler.headers)
-            return handler.execute()
+            return iter(handler.execute())
         ## if an HTTPError was thrown, send down an error page
         ## based on the thrown HTTP status code
         except HTTPError, e:
             handler = ErrorRequestHandler(self, env, status=e.status)
             status = util.code_to_status(handler.status)
             callback(status, handler.headers)
-            return handler.execute()
+            return iter(handler.execute())
         ## return a 500 Internal Server Error page if any
         ## other exceptions have been thrown. We will also send
         ## a traceback for further investigation of the error
@@ -263,7 +263,7 @@ class WebApplication(object):
             handler = ErrorRequestHandler(self, env, status=500)
             status = util.code_to_status(handler.status)
             callback(status, handler.headers)
-            return handler.execute()
+            return iter(handler.execute())
 
 class ErrorRequestHandler(RequestHandler):
     """ Generate error pages based on HTTP status codes
@@ -297,4 +297,3 @@ class HTTPError(Exception):
     """
     def __init__(self, status=404):
         self.status = status
-
