@@ -141,47 +141,99 @@ class RequestHandler(object):
         return [data]
 
 
+class Router(object):
+    """ Router implementation
+    
+    A route maps a uri to a RequestHandler subclass based on a provided
+    regular expression. In the regex, a match can be specified, which will
+    be passed to the request handler as method arguments.
+
+    Example:
+        router = mortimer.web.Router()
+        routes = [
+            (r'^/$', SomeHandlerClass),
+            (r'^/test/?$', SomeOtherHandlerClass),
+        ]
+        router.set_routes(routes)
+        router.add_route((r'/login/?$', LoginHandlerClass))
+    """
+    def __init__(self):
+        self.routes = []
+
+    def compile_routes(self):
+        """ Compile the route regular expressions
+        
+        The routes are persisted for the lifetime of the application,
+        and will likely be called many times. We will compile the expressions
+        here to ensure they are cached for the lifetime of our application
+        """
+        self.routes = [(re.compile(pattern), obj) for (pattern, obj) in self.routes]
+
+    def set_routes(self, routes):
+        """ Set the list of routes
+        
+        This will set or replace the route list to the passed
+        list of routes. Each route regular expressions will be 
+        compiled after they are added.
+        """
+        self.routes = routes
+        self.compile_routes()
+
+    def add_route(self, route):
+        """ Add a route to the route list 
+        
+        This will add a specified route tuple to the route list,
+        compiling the regular expression after it is added.
+        """
+        self.routes.append(route)
+        self.compile_routes()
+
+    def find_route(self, uri):
+        """ Find a route matching the specified URI
+        If no matching route is found, None is returned
+        """
+        for (regex, obj) in self.routes:
+            m = regex.match(uri)
+            if m is not None:
+                return (obj, m.groups())
+        return None
+
+
 class WebApplication(object):
     """ Base web application class
 
     Subclasses of WebApplication will contain a collection of request
-    handlers that will make up the web application. It is the responsiblity
-    of the subclass instance to define the handlers that the application
+    routes that will make up the web application. It is the responsiblity
+    of the subclass instance to define the routes that the application
     will handle.
 
         class TestApplication(WebApplication):
             def __init__(self):
-                self.handlers = [
+                super(TestApplication. self).__init__()
+                self.routes = [
                     (r'^/$', SomeHandlerClass),
                     (r'^/test/?$', SomeOtherHandlerClass),
                 ]
+                self.router.set_routes(self.routes)
 
     Webapplication instances are directly callable and conform to the WSGI
     specification.
     """
     def __init__(self):
-        self.handlers = []
+        self.router = Router()
 
-    def find_handler(self, uri):
-        """ Find the correct handler
-
-        Iterate though our list of handlers, trying to match the request
-        URI to the regex defined in our request handler list. If no
-        handler is found for the request URI, a 404 exception will be raised
-        """
-        for h in self.handlers:
-            m = re.match(h[0], uri)
-            if m is not None:
-                return (h[1], m.groups())
-
-        ## no handler found for uri -- raise 404
-        raise HTTPError(status=404)
+    def find_route(self, uri):
+        """ Find a route matching the requested URI """
+        handler = self.router.find_route(uri)
+        if handler is None:
+            raise HTTPError(status=404)
+        return handler
 
     def __call__(self, env, callback):
         """ Called to execute the request """
         uri = env['PATH_INFO']
         try:
-            handler, args = self.find_handler(uri)
+            handler, args = self.find_route(uri)
             h = handler(self, env)
             ret = h.execute(*args)
             status = util.code_to_status(h.status)
