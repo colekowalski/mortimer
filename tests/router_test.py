@@ -17,12 +17,12 @@ class TestRouter(unittest.TestCase):
         route = self.router.find_route('/')
         self.assertNotEqual(route, None)
 
-    def test_set_routes(self):
+    def test_add_route_list(self):
         route_list = [
             (r'/$', None),
             (r'/login/?$', None),
         ]
-        self.router.set_routes(route_list)
+        self.router.add_route_list(route_list)
         root = self.router.find_route('/')
         login = self.router.find_route('/login/')
         self.assertNotEqual(root, None)

@@ -143,7 +143,7 @@ class RequestHandler(object):
 
 class Router(object):
     """ Router implementation
-    
+
     A route maps a uri to a RequestHandler subclass based on a provided
     regular expression. In the regex, a match can be specified, which will
     be passed to the request handler as method arguments.
@@ -162,26 +162,27 @@ class Router(object):
 
     def compile_routes(self):
         """ Compile the route regular expressions
-        
+
         The routes are persisted for the lifetime of the application,
         and will likely be called many times. We will compile the expressions
         here to ensure they are cached for the lifetime of our application
         """
         self.routes = [(re.compile(pattern), obj) for (pattern, obj) in self.routes]
 
-    def set_routes(self, routes):
+    def add_route_list(self, routes):
         """ Set the list of routes
-        
-        This will set or replace the route list to the passed
-        list of routes. Each route regular expressions will be 
+
+        This will add the provided list of routes to the router's
+        list of routes. Each route regular expressions will be
         compiled after they are added.
         """
-        self.routes = routes
+        for route in routes:
+            self.add_route(route)
         self.compile_routes()
 
     def add_route(self, route):
-        """ Add a route to the route list 
-        
+        """ Add a route to the route list
+
         This will add a specified route tuple to the route list,
         compiling the regular expression after it is added.
         """

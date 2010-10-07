@@ -14,16 +14,18 @@ Example
 -------
 
     import mortimer.web
-    
+
     class IndexController(mortimer.web.RequestHandler):
         def get(self):
             return 'Hello, World'
-    
+
     class MyWebApplication(mortimer.web.WebApplication):
         def __init__(self):
-            self.handlers = [
+            super(MyWebApplication, self).__init__()
+            self.routes = [
                 (r'/$', IndexController)
             ]
+            self.router.add_route_list(self.routes)
 
     app = MyWebApplication()
     def application(env, cb):
@@ -42,4 +44,4 @@ License (Apache)
     distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
     WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
     License for the specific language governing permissions and limitations
-    under the License.        
+    under the License.
