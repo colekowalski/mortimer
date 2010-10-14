@@ -38,6 +38,7 @@ class RequestHandler(object):
         self.session = None
         self.status = 200
         self.headers = []
+        self.__raw_data = ''
         self.init_request()
 
     def init_request(self):
@@ -50,6 +51,12 @@ class RequestHandler(object):
         self.headers = [
             ('Content-type', 'text/html; charset=UTF-8')
         ]
+
+        ## laod in the data
+        content_length = 0
+        if self.env.get('CONTENT_LENGTH'):
+            content_length = int(self.env.get('CONTENT_LENGTH'))
+        self.__raw_data = self.env['wsgi.input'].read(content_length)
 
     def add_header(self, name, val):
         """ Add a header to our list of headers
@@ -112,9 +119,25 @@ class RequestHandler(object):
         """ Return the parsed post arguments of the request"""
         if self.env['REQUEST_METHOD'] != 'POST':
             return {}
-        length = self.env['CONTENT_LENGTH']
-        data = self.env['wsgi.input'].read(int(length))
-        return util.parse_post_vars(data)
+        ## multipart/form-data
+        elif self.env.get('CONTENT_TYPE', '').startswith('multipart/form-data'):
+            content_type = self.env.get('CONTENT_TYPE', '')
+            boundary = content_type.split('boundary=', 1)[1]
+            post, files = util.parse_multipart(self.__raw_data, boundary)
+            return post
+        ## normal post submission
+        return util.parse_post_vars(self.__raw_data)
+
+    @property
+    def files(self):
+        if self.env['REQUEST_METHOD'] != 'POST':
+            return {}
+        if not self.env.get('CONTENT_TYPE', '') .startswith('multipart/form-data'):
+            return {}
+        content_type = self.env.get('CONTENT_TYPE', '')
+        boundary = content_type.split('boundary=', 1)[1]
+        post, files = util.parse_multipart(self.__raw_data, boundary)
+        return files
 
     @property
     def cookies(self):

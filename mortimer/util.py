@@ -12,6 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import re
 import urllib
 import httplib
 
@@ -65,6 +66,106 @@ def parse_cookie_data(data):
         except ValueError:
             pass
     return cookies
+
+def parse_multipart(input, boundary):
+    """ Parse multipart/form-data
+    
+    Parse mime-encoded multipart/form-data into a
+    python dictionary. This function returns a tuple
+    consisting of post vars, and files.
+    
+    Attributes:
+        input       -- Input data to be parsed
+        boundary    -- Field boundary as returned in the content type
+    """
+    files = {}
+    post_args = {}
+
+    ## skip the ending boundary (\r\n--<boundary>--)
+    skip = len('\r\n' + '--' + boundary + '--')
+    parts = input[:-skip].split('--' + boundary + '\r\n')
+    for part in parts:
+        end = part.find('\r\n\r\n')
+        if end == -1:
+            ## if the part does not end in '\r\n\r\n', the
+            ## headers are messed up -- better skip this one
+            continue
+        headers = parse_headers(part[:end])
+        name_header = headers.get('Content-Disposition', '')
+        if not name_header.startswith('form-data'):
+            ## if the header doesn't begin with form-data
+            ## it is an invalid multipart/form-data header
+            continue
+        header_fields = parse_header_fields(name_header)
+        ## strip leading and trailing '\r\n'
+        data = part[end+4:-2]
+        if 'filename' in header_fields:
+            name = header_fields.get('name')
+            files[name] = {
+                'filename': header_fields.get('filename'),
+                'content_type': headers.get('Content-Type', 'application/unknown'),
+                'size': len(data),
+                'file': data,
+            }
+        else:
+            name = header_fields.get('name')
+            post_args[name] = data
+    return (post_args, files)
+
+def parse_header_fields(header):
+    """ Parse header fields into a python dict
+    
+    Attributes:
+        header  -- Header to be parsed
+    """
+    fields = {}
+    for item in header.split(';'):
+        kv = item.split('=')
+        if len(kv) == 1:
+            fields[kv[0].strip()] = None
+            continue
+        kv = [x.strip() for x in kv]
+        fields[kv[0]] = kv[1].strip('"')
+    return fields
+
+def parse_headers(header):
+    """Parse the HTTP headers
+    Parse the HTTP headers according to RFC 2616 section 4.2
+
+    According to the cookie spec, set-cookie headers can not
+    be moved, for obvious reasons. In the scope of this function
+    the set-cookie headers will be merged for simplicity.
+    
+    Attributes:
+        header  -- Headers string to be parsed
+    """
+    headers = {}
+    last_header = None
+    header_pattern = r'^([\w\d\-()<>@,;:\\\"\/\[\]?={}]+):\s*(.*)$'
+    for line in header.splitlines():
+        ## multi-line header -- append
+        if (re.match(r'\s+', line) and last_header is not None):
+            headers[last_header] += line
+            continue
+
+        m = re.match(header_pattern, line)
+        if not m: continue
+        token, data = m.groups()
+        if token in headers:
+            if last_header == 'set-cookie':
+                ## the cookie spec does not allow set-cookie headers
+                ## to be merged. Here we will merge them for simplicity
+                ## this will break retrieving the value of 'set-cookie'
+                ## but I don't think we'll need that right now
+                headers[token] += '\r\nSet-Cookie: %s' %(data)
+            else:
+                ## standard merged headers
+                headers[token] += ', %s' %(data)
+        else:
+            ## non-merged header
+            headers[token] = data
+            last_header = token
+    return headers
 
 def code_to_status(code):
     """ Convert HTTP code to response string
