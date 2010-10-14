@@ -15,7 +15,7 @@
 import urllib
 import httplib
 
-def process_get_vars(data):
+def parse_get_vars(data):
     """ Parse query string into key-value pairs. """
     get = {}
     if data is None or data == '':
@@ -28,7 +28,7 @@ def process_get_vars(data):
             pass
     return get
 
-def process_post_vars(data):
+def parse_post_vars(data):
     """ Parse post data into key-value pairs.
 
     If there are multiple form items of the same name, a list will be
@@ -55,7 +55,7 @@ def process_post_vars(data):
             pass
     return post
 
-def process_cookie_data(data):
+def parse_cookie_data(data):
     """ Parse cookie data into key-value pairs """
     cookies = {}
     for c in data.split('; '):

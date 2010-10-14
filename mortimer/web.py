@@ -105,7 +105,7 @@ class RequestHandler(object):
     def get_args(self):
         """ Return the parsed query string arguments of the request """
         data = self.env['QUERY_STRING']
-        return util.process_get_vars(data)
+        return util.parse_get_vars(data)
 
     @property
     def post_args(self):
@@ -114,14 +114,14 @@ class RequestHandler(object):
             return {}
         length = self.env['CONTENT_LENGTH']
         data = self.env['wsgi.input'].read(int(length))
-        return util.process_post_vars(data)
+        return util.parse_post_vars(data)
 
     @property
     def cookies(self):
         """ Return the parsed HTTP cookies """
         try:
             data = self.env['HTTP_COOKIE']
-            return util.process_cookie_data(data)
+            return util.parse_cookie_data(data)
         except:
             return {}
 
@@ -245,6 +245,7 @@ class WebApplication(object):
         ## a 405 Method Not ALlowed status might work here, but for
         ## now we will just send a 404 status
         except AttributeError:
+            traceback.print_exc(file=env['wsgi.errors'])
             handler = ErrorRequestHandler(self, env, status=404)
             status = util.code_to_status(handler.status)
             callback(status, handler.headers)
@@ -252,6 +253,7 @@ class WebApplication(object):
         ## if an HTTPError was thrown, send down an error page
         ## based on the thrown HTTP status code
         except HTTPError, e:
+            traceback.print_exc(file=env['wsgi.errors'])
             handler = ErrorRequestHandler(self, env, status=e.status)
             status = util.code_to_status(handler.status)
             callback(status, handler.headers)
