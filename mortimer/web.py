@@ -238,7 +238,7 @@ class WebApplication(object):
                     (r'^/$', SomeHandlerClass),
                     (r'^/test/?$', SomeOtherHandlerClass),
                 ]
-                self.router.set_routes(self.routes)
+                self.router.add_route_list(self.routes)
 
     Webapplication instances are directly callable and conform to the WSGI
     specification.
