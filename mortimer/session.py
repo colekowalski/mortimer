@@ -105,6 +105,8 @@ class Session(dict):
         self.store.save(self.session_id, pdata)
 
     def load(self):
+        if not self.session_id:
+            self.session_id = self.load_session_id()
         try:
             data = self.store.load(self.session_id)
             self.session = self.unpickle_session(data)
