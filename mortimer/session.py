@@ -18,7 +18,40 @@ import cPickle
 import hashlib
 import datetime
 
-class FileStore(object):
+class BaseStore(object):
+    """ Base session storage class
+
+    The session storage class is responsible for saving the
+    serialized session data to a particular data store. Subclasses
+    of this class are responsible for implementing the save, load,
+    and delete functionality.
+    """
+    def __init__(self, **kwargs):
+        pass
+
+    def save(self, session_id, data):
+        pass
+
+    def load(self, session_id):
+        return ""
+
+    def delete(self, session_id):
+        pass
+
+
+class DummyStore(BaseStore):
+    """ Dummy session storage class
+
+    This storage class will preform no action. No data will be
+    written, read, or deleted when their respective methods
+    are called.
+
+    This is probably only useful in testing situations.
+    """
+    pass
+
+
+class FileStore(BaseStore):
     """ Store for saving session data to disk
 
     This store will save serialized session data to disk. By default
@@ -28,16 +61,18 @@ class FileStore(object):
 
     The file name of each session will be the session id
     """
-    def __init__(self, path='/tmp/'):
+    def __init__(self, path='/tmp/', **kwargs):
+        super(FileStore, self).__init__(**kwargs)
         self.path = path
 
     def save(self, sess_id, data):
+        """ Save the session data to a file """
         fname = os.path.join(self.path, sess_id)
         with open(fname, 'w') as f:
             f.write(data)
 
     def load(self, sess_id):
-        data = None
+        """ Load the session data from a file """
         fname = os.path.join(self.path, sess_id)
         with open(fname, 'r') as f:
             data = f.read()
@@ -54,61 +89,46 @@ class Session(dict):
     where the session data should be serialized to. By default
     session data will be serialized to the filesystem
     """
-    def __init__(self, req, store=FileStore()):
-        self.req = req
+    def __init__(self, session_id=None):
+        super(Session, self).__init__()
         self.dirty = False
-        self.session = {}
-        self.session_id = None
-        self.store = FileStore()
-
-    def __getitem__(self, key):
-        if self.session == {}:
-            self.load()
-        try:
-            return self.session[key]
-        except KeyError:
-            return None
+        self.session_id = session_id
+        if not self.session_id:
+            self.session_id = self.gen_session_id()
 
     def __setitem__(self, key, value):
+        """ Add item to the session
+        When an item is added, the dirty flag will be set, which
+        lets us know that the session must be written out to the
+        SessionStore
+        """
         self.dirty = True
-        self.session[key] = value
-
-    def load_session_id(self):
-        try:
-            sess_id = self.req.cookies['session_id']
-            return sess_id
-        except KeyError:
-            return None
-
-    def send_session_cookie(self):
-        self.req.set_cookie('session_id=%s' %(self.session_id))
+        dict.__setitem__(self, key, value)
 
     def gen_session_id(self):
+        """ Generate a random session id """
         s = hashlib.md5()
         s.update(str(datetime.datetime.now()))
         s.update(str(random.random()))
         return s.hexdigest()
 
-    def pickle_session(self):
-        return cPickle.dumps(self.session)
-
-    def unpickle_session(self, data):
-        return cPickle.loads(data)
-
-    def save(self):
+    def save(self, store=None):
+        """ Save the session.
+        The session data will only be serialized and written
+        out to the SessionStore if any modifications have been
+        made, as reported by the self.dirty flag
+        """
         if not self.dirty:
             return
-        if self.session_id is None:
-            self.session_id = self.gen_session_id()
-        self.send_session_cookie()
-        pdata = self.pickle_session()
-        self.store.save(self.session_id, pdata)
+        self.dirty = False
+        pdata = cPickle.dumps(self)
+        store.save(self.session_id, pdata)
 
-    def load(self):
-        if not self.session_id:
-            self.session_id = self.load_session_id()
+    @classmethod
+    def load(self, session_id, store=None):
+        """ Load a session from the SessionStore given a session id """
         try:
-            data = self.store.load(self.session_id)
-            self.session = self.unpickle_session(data)
+            data = store.load(session_id)
+            return cPickle.loads(data)
         except:
-            self.session = {}
+            return Session(session_id=session_id)

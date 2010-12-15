@@ -35,24 +35,26 @@ class RequestHandler(object):
     def __init__(self, application, env):
         self.application = application
         self.env = env
-        self.session = None
+        self._session = None
+        self.session_store = session.DummyStore()
         self.status = 200
         self.headers = []
         self.__raw_data = ''
         self.init_request()
 
     def init_request(self):
-        """ Initialize the request
-
-        Here we will initialize the request by setting up our session
-        and setting some default headers
-        """
-        self.session = session.Session(self)
+        """ Initialize the request """
         self.headers = [
             ('Content-type', 'text/html; charset=UTF-8')
         ]
 
-        ## laod in the data
+        ## was a session store object specified?
+        try:
+            self.session_store = self.application.session_store
+        except AttributeError:
+            pass
+
+        ## load in the data
         content_length = 0
         if self.env.get('CONTENT_LENGTH'):
             content_length = int(self.env.get('CONTENT_LENGTH'))
@@ -148,6 +150,13 @@ class RequestHandler(object):
         except:
             return {}
 
+    @property
+    def session(self):
+        if not self._session:
+            session_id = self.cookies.get('session_id', None)
+            self._session = session.Session.load(session_id, self.session_store)
+        return self._session
+
     def execute(self, *args, **kwargs):
         """ Execute our handler
 
@@ -159,8 +168,9 @@ class RequestHandler(object):
         handler = getattr(self, method.lower())
         data = handler(*args, **kwargs)
         ## save the session
-        if self.session is not None:
-            self.session.save()
+        if self._session is not None:
+            self.set_cookie('session_id=%s' %(self._session.session_id))
+            self.session.save(self.session_store)
         return [data]
 
 
