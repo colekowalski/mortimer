@@ -89,10 +89,12 @@ class Session(dict):
     where the session data should be serialized to. By default
     session data will be serialized to the filesystem
     """
-    def __init__(self, session_id=None):
+    def __init__(self, data=None, session_id=None):
         super(Session, self).__init__()
         self.dirty = False
         self.session_id = session_id
+        if data:
+            self.update(data)
         if not self.session_id:
             self.session_id = self.gen_session_id()
 
@@ -128,7 +130,8 @@ class Session(dict):
     def load(self, session_id, store=None):
         """ Load a session from the SessionStore given a session id """
         try:
-            data = store.load(session_id)
-            return cPickle.loads(data)
+            serialized = store.load(session_id)
+            data = cPickle.loads(serialized)
+            return Session(data=data, session_id=session_id)
         except:
             return Session(session_id=session_id)
