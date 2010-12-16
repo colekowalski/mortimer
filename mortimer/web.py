@@ -152,7 +152,7 @@ class RequestHandler(object):
 
     @property
     def session(self):
-        if not self._session:
+        if self._session is None:
             session_id = self.cookies.get('session_id', None)
             self._session = session.Session.load(session_id, self.session_store)
         return self._session
