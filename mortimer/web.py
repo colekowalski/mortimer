@@ -169,8 +169,11 @@ class RequestHandler(object):
         method = self.env['REQUEST_METHOD']
         handler = getattr(self, method.lower())
         data = handler(*args, **kwargs)
-        ## save the session
-        if self._session is not None:
+        if self._session is not None and self._session.deleted:
+            self.set_cookie('session_id=%s' %(self._session.session_id), delete=True)
+            self._session.delete(self.session_store)
+            self._session = None
+        elif self._session is not None:
             self.set_cookie('session_id=%s' %(self._session.session_id))
             self.session.save(self.session_store)
         return [data]

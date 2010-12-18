@@ -78,6 +78,13 @@ class FileStore(BaseStore):
             data = f.read()
         return data
 
+    def delete(self, sess_id):
+        fname = os.path.join(self.path, sess_id)
+        try:
+            os.remove(fname)
+        except:
+            pass
+
 
 class Session(dict):
     """ HTTP Session Implementation
@@ -92,6 +99,7 @@ class Session(dict):
     def __init__(self, data=None, session_id=None):
         super(Session, self).__init__()
         self.dirty = False
+        self.deleted = False
         self.session_id = session_id
         if data:
             self.update(data)
@@ -113,6 +121,12 @@ class Session(dict):
         s.update(str(datetime.datetime.now()))
         s.update(str(random.random()))
         return s.hexdigest()
+
+    def expire(self):
+        self.deleted = True
+
+    def delete(self, store=None):
+        store.delete(self.session_id)
 
     def save(self, store=None):
         """ Save the session.
