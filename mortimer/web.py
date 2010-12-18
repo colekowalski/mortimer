@@ -92,10 +92,12 @@ class RequestHandler(object):
         """ Convenience method to set the HTTP status code """
         self.status = status
 
-    def set_cookie(self, data, expires=None, path='/', domain=None):
+    def set_cookie(self, data, expires=None, path='/', domain=None, delete=False):
         """ Create a cookie and append a Set-Cookie header """
         cookie = data
-        if expires: cookie += '; expires=%s' %(expires,)
+        if delete:
+            cookie += '; expires=Sat, 01-Jan-2000 00:00:00 GMT'
+        elif expires: cookie += '; expires=%s' %(expires,)
         if path: cookie += '; path=%s' %(path,)
         if domain: cookie += '; domain=%s' %(domain,)
         self.add_header('Set-Cookie', cookie)
