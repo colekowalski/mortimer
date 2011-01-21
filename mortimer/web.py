@@ -121,10 +121,8 @@ class RequestHandler(object):
     @property
     def post_args(self):
         """ Return the parsed post arguments of the request"""
-        if self.env['REQUEST_METHOD'] != 'POST':
-            return {}
         ## multipart/form-data
-        elif self.env.get('CONTENT_TYPE', '').startswith('multipart/form-data'):
+        if self.env.get('CONTENT_TYPE', '').startswith('multipart/form-data'):
             content_type = self.env.get('CONTENT_TYPE', '')
             boundary = content_type.split('boundary=', 1)[1]
             post, files = util.parse_multipart(self.__raw_data, boundary)
